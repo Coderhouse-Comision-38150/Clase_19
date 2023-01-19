@@ -1,5 +1,8 @@
 // Instanciamos las dependencias
-import mongoose from 'mongoose'
+import mongoose, { mongo } from 'mongoose'
+
+// Eliminar warning
+mongoose.set('strictQuery', true);
 
 // Insertar estudiantes a la colección
 const estudiantes = [
@@ -27,3 +30,26 @@ const estudianteSchema = new mongoose.Schema({
 
 const EstudiantesDAO = mongoose.model('estudiantes', estudianteSchema)
 
+/* Conexión a la base de datos */
+
+await mongoose.connect('mongodb://127.0.0.1/colegio', {
+    serverSelectionTimeoutMS: 5000,
+})
+console.log('Base de datos conectada')
+
+/* Insertar datos a la base de datos */
+const inserciones = []
+
+for(const estudiante of estudiantes) {
+    inserciones.push(EstudiantesDAO.create(estudiante))
+}
+
+const results = await Promise.allSettled(inserciones)
+const rejected = results.filter(r => r.status == 'rejected')
+if (rejected.length > 0) {
+    console.log(`Hubo ${rejected.length} fallos`)
+} else {
+    console.log('Todo OK!')
+}
+
+await mongoose.disconnect()
